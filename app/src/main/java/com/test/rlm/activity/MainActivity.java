@@ -51,7 +51,7 @@ public class MainActivity extends AppCompatActivity {
         setupRecycler();
 
 
-            setRealmData();
+        setRealmData();
 
 
         // refresh the realm instance
@@ -81,7 +81,7 @@ public class MainActivity extends AppCompatActivity {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
 
-                                Book book = new Book();
+                                final Book book = new Book();
                                 //book.setId(RealmController.getInstance().getBooks().size() + 1);
                                 book.setId((int) (RealmController.getInstance().getBooks().size() + System.currentTimeMillis()));
                                 book.setTitle(editTitle.getText().toString());
@@ -92,9 +92,23 @@ public class MainActivity extends AppCompatActivity {
                                     Toast.makeText(MainActivity.this, "Entry not saved, missing title", Toast.LENGTH_SHORT).show();
                                 } else {
                                     // Persist your data easily
+
                                     realm.beginTransaction();
                                     realm.copyToRealm(book);
                                     realm.commitTransaction();
+
+                                    /**
+                                     * Tried to do the same in background thread
+                                     */
+                                    /*new AsyncTask<Void, Void, Void>() {
+                                        @Override
+                                        protected Void doInBackground(Void... params) {
+                                            realm.beginTransaction();
+                                            realm.copyToRealm(book);
+                                            realm.commitTransaction();
+                                            return null;
+                                        }
+                                    }.execute();*/
 
                                     adapter.notifyDataSetChanged();
 
@@ -185,7 +199,6 @@ public class MainActivity extends AppCompatActivity {
             realm.copyToRealmOrUpdate(b);
             realm.commitTransaction();
         }
-
 
 
     }
