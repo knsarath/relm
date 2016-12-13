@@ -2,21 +2,15 @@ package com.test.rlm.app;
 
 import android.app.Application;
 
-import io.realm.Realm;
-import io.realm.RealmConfiguration;
+import com.test.rlm.realm.RealmController;
 
 public class MyApplication extends Application {
 
+    private static final Integer DB_VERSION = 1;
+
     @Override
     public void onCreate() {
-
         super.onCreate();
-        RealmConfiguration realmConfiguration = new RealmConfiguration.Builder(this)
-                .name(Realm.DEFAULT_REALM_NAME)
-                .schemaVersion(0)
-                .deleteRealmIfMigrationNeeded()
-                .build();
-        Realm.setDefaultConfiguration(realmConfiguration);
-
+        RealmController.init(this, DB_VERSION);
     }
 }

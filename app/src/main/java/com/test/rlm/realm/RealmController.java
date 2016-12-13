@@ -1,94 +1,59 @@
 package com.test.rlm.realm;
 
 
-import android.app.Activity;
-import android.app.Application;
-import android.support.v4.app.Fragment;
+import android.content.Context;
 
 import com.test.rlm.model.Book;
 
 import io.realm.Realm;
+import io.realm.RealmConfiguration;
+import io.realm.RealmObject;
 import io.realm.RealmResults;
 
 
 public class RealmController {
 
-    private static RealmController instance;
-    private final Realm realm;
 
-    public RealmController(Application application) {
-        realm = Realm.getDefaultInstance();
-    }
-
-    public static RealmController with(Fragment fragment) {
-
-        if (instance == null) {
-            instance = new RealmController(fragment.getActivity().getApplication());
-        }
-        return instance;
-    }
-
-    public static RealmController with(Activity activity) {
-
-        if (instance == null) {
-            instance = new RealmController(activity.getApplication());
-        }
-        return instance;
-    }
-
-    public static RealmController with(Application application) {
-
-        if (instance == null) {
-            instance = new RealmController(application);
-        }
-        return instance;
-    }
-
-    public static RealmController getInstance() {
-
-        return instance;
-    }
-
-    public Realm getRealm() {
-
-        return realm;
-    }
-
-    //Refresh the realm istance
-    public void refresh() {
-
-
+    public static void init(Context context, Integer dbVersion) {
+        Realm.init(context);
+        RealmConfiguration realmConfiguration = new RealmConfiguration.Builder()
+                .name(Realm.DEFAULT_REALM_NAME)
+                .schemaVersion(dbVersion)
+                .deleteRealmIfMigrationNeeded()
+                .build();
+        Realm.setDefaultConfiguration(realmConfiguration);
     }
 
     //clear all objects from Book.class
     public void clearAll() {
-
+        Realm realm = Realm.getDefaultInstance();
         realm.beginTransaction();
-        realm.clear(Book.class);
+        realm.delete(Book.class);
         realm.commitTransaction();
+        realm.close();
     }
 
     //find all objects in the Book.class
     public RealmResults<Book> getBooks() {
-
+        Realm realm = Realm.getDefaultInstance();
         return realm.where(Book.class).findAll();
     }
 
     //query a single item with the given id
     public Book getBook(String id) {
-
+        Realm realm = Realm.getDefaultInstance();
         return realm.where(Book.class).equalTo("id", id).findFirst();
     }
 
     //check if Book.class is empty
     public boolean hasBooks() {
-
-        return !realm.allObjects(Book.class).isEmpty();
+        Realm realm = Realm.getDefaultInstance();
+        return !realm.where(Book.class).findAll().isEmpty();
     }
 
     //query example
     public RealmResults<Book> queryedBooks() {
-
+        Realm realm = Realm.getDefaultInstance();
         return realm.where(Book.class)
                 .contains("author", "Author 0")
                 .or()
@@ -96,4 +61,36 @@ public class RealmController {
                 .findAll();
 
     }
+
+    public void save(RealmObject book) {
+        Realm realm = Realm.getDefaultInstance();
+        realm.beginTransaction();
+        realm.copyToRealm(book);
+        realm.commitTransaction();
+        realm.close();
+    }
+
+    public void saveOrUpdate(RealmObject book) {
+        Realm realm = Realm.getDefaultInstance();
+        realm.beginTransaction();
+        realm.copyToRealmOrUpdate(book);
+        realm.commitTransaction();
+        realm.close();
+    }
+
+    public void saveAll(Iterable<? extends RealmObject> items) {
+        Realm realm = Realm.getDefaultInstance();
+        realm.beginTransaction();
+        realm.copyToRealm(items);
+        realm.commitTransaction();
+    }
+
+    public void saveAllOrUpdate(Iterable<? extends RealmObject> items) {
+        Realm realm = Realm.getDefaultInstance();
+        realm.beginTransaction();
+        realm.copyToRealmOrUpdate(items);
+        realm.commitTransaction();
+    }
+
+
 }

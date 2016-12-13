@@ -14,24 +14,19 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import com.test.rlm.adapters.BooksAdapter;
-import com.test.rlm.adapters.RealmBooksAdapter;
 import com.test.rlm.model.Book;
 import com.test.rlm.realm.RealmController;
 
 import java.util.ArrayList;
 
 import app.androidhive.info.realm.R;
-import io.realm.Realm;
-import io.realm.RealmResults;
 
-public class MainActivity extends AppCompatActivity {
-
-
+public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     private BooksAdapter adapter;
-    private Realm realm;
     private LayoutInflater inflater;
     private FloatingActionButton fab;
     private RecyclerView recycler;
+    private RealmController mRealmController;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,34 +35,57 @@ public class MainActivity extends AppCompatActivity {
 
         fab = (FloatingActionButton) findViewById(R.id.fab);
         recycler = (RecyclerView) findViewById(R.id.recycler);
-
-        //get realm instance
-        this.realm = RealmController.with(this).getRealm();
+        mRealmController = new RealmController();
 
         //set toolbar
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
         setupRecycler();
-
-
         setRealmData();
 
-
         // refresh the realm instance
-        RealmController.with(this).refresh();
+        //RealmController.with(this).refresh();
         // get all persisted objects
         // create the helper adapter and notify data set changes
         // changes will be reflected automatically
-        setRealmAdapter(RealmController.with(this).getBooks());
 
         Toast.makeText(this, "Press card item for edit, long press to remove item", Toast.LENGTH_LONG).show();
 
         //add new item
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+        fab.setOnClickListener(this);
+    }
 
+
+    private void setupRecycler() {
+        // use this setting to improve performance if you know that changes
+        // in content do not change the layout size of the RecyclerView
+        recycler.setHasFixedSize(true);
+
+        // use a linear layout manager since the cards are vertically scrollable
+        final LinearLayoutManager layoutManager = new LinearLayoutManager(this);
+        layoutManager.setOrientation(LinearLayoutManager.VERTICAL);
+        recycler.setLayoutManager(layoutManager);
+
+        // create an empty adapter and add it to the recycler view
+        adapter = new BooksAdapter(this, mRealmController, mRealmController.getBooks());
+        recycler.setAdapter(adapter);
+    }
+
+    private void setRealmData() {
+        ArrayList<Book> books = new ArrayList<>();
+        Book book = new Book();
+        book.setId(1);
+        book.setAuthor("Reto Meier");
+        book.setTitle("Android 4 Application Development");
+        book.setImageUrl("http://api.androidhive.info/images/realm/1.png");
+        books.add(book);
+        mRealmController.saveAllOrUpdate(books);
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.fab:
                 inflater = MainActivity.this.getLayoutInflater();
                 View content = inflater.inflate(R.layout.edit_item, null);
                 final EditText editTitle = (EditText) content.findViewById(R.id.title);
@@ -83,7 +101,7 @@ public class MainActivity extends AppCompatActivity {
 
                                 final Book book = new Book();
                                 //book.setId(RealmController.getInstance().getBooks().size() + 1);
-                                book.setId((int) (RealmController.getInstance().getBooks().size() + System.currentTimeMillis()));
+                                book.setId(mRealmController.getBooks().size());
                                 book.setTitle(editTitle.getText().toString());
                                 book.setAuthor(editAuthor.getText().toString());
                                 book.setImageUrl(editThumbnail.getText().toString());
@@ -92,28 +110,28 @@ public class MainActivity extends AppCompatActivity {
                                     Toast.makeText(MainActivity.this, "Entry not saved, missing title", Toast.LENGTH_SHORT).show();
                                 } else {
                                     // Persist your data easily
-
-                                    realm.beginTransaction();
-                                    realm.copyToRealm(book);
-                                    realm.commitTransaction();
+                                    mRealmController.save(book);
+                                    adapter.notifyDataSetChanged();
+                                    recycler.scrollToPosition(mRealmController.getBooks().size() - 1);
 
                                     /**
                                      * Tried to do the same in background thread
                                      */
-                                    /*new AsyncTask<Void, Void, Void>() {
+                                   /* new AsyncTask<Void, Void, Void>() {
                                         @Override
                                         protected Void doInBackground(Void... params) {
-                                            realm.beginTransaction();
-                                            realm.copyToRealm(book);
-                                            realm.commitTransaction();
+                                            mRealmController.save(book);
                                             return null;
+                                        }
+
+                                        @Override
+                                        protected void onPostExecute(Void aVoid) {
+                                            super.onPostExecute(aVoid);
+                                            adapter.notifyDataSetChanged();
+                                            recycler.scrollToPosition(mRealmController.getBooks().size() - 1);
                                         }
                                     }.execute();*/
 
-                                    adapter.notifyDataSetChanged();
-
-                                    // scroll the recycler view to bottom
-                                    recycler.scrollToPosition(RealmController.getInstance().getBooks().size() - 1);
                                 }
                             }
                         })
@@ -126,80 +144,7 @@ public class MainActivity extends AppCompatActivity {
                         });
                 AlertDialog dialog = builder.create();
                 dialog.show();
-            }
-        });
-    }
-
-    public void setRealmAdapter(RealmResults<Book> books) {
-
-        RealmBooksAdapter realmAdapter = new RealmBooksAdapter(this.getApplicationContext(), books, true);
-        // Set the data and tell the RecyclerView to draw
-        adapter.setRealmAdapter(realmAdapter);
-        adapter.notifyDataSetChanged();
-    }
-
-    private void setupRecycler() {
-        // use this setting to improve performance if you know that changes
-        // in content do not change the layout size of the RecyclerView
-        recycler.setHasFixedSize(true);
-
-        // use a linear layout manager since the cards are vertically scrollable
-        final LinearLayoutManager layoutManager = new LinearLayoutManager(this);
-        layoutManager.setOrientation(LinearLayoutManager.VERTICAL);
-        recycler.setLayoutManager(layoutManager);
-
-        // create an empty adapter and add it to the recycler view
-        adapter = new BooksAdapter(this);
-        recycler.setAdapter(adapter);
-    }
-
-    private void setRealmData() {
-
-        ArrayList<Book> books = new ArrayList<>();
-
-        Book book = new Book();
-        book.setId((int) (1 + System.currentTimeMillis()));
-        book.setAuthor("Reto Meier");
-        book.setTitle("Android 4 Application Development");
-        book.setImageUrl("http://api.androidhive.info/images/realm/1.png");
-        books.add(book);
-
-        book = new Book();
-        book.setId((int) (2 + System.currentTimeMillis()));
-        book.setAuthor("Itzik Ben-Gan");
-        book.setTitle("Microsoft SQL Server 2012 T-SQL Fundamentals");
-        book.setImageUrl("http://api.androidhive.info/images/realm/2.png");
-        books.add(book);
-
-        book = new Book();
-        book.setId((int) (3 + System.currentTimeMillis()));
-        book.setAuthor("Magnus Lie Hetland");
-        book.setTitle("Beginning Python: From Novice To Professional Paperback");
-        book.setImageUrl("http://api.androidhive.info/images/realm/3.png");
-        books.add(book);
-
-        book = new Book();
-        book.setId((int) (4 + System.currentTimeMillis()));
-        book.setAuthor("Chad Fowler");
-        book.setTitle("The Passionate Programmer: Creating a Remarkable Career in Software Development");
-        book.setImageUrl("http://api.androidhive.info/images/realm/4.png");
-        books.add(book);
-
-        book = new Book();
-        book.setId((int) (5 + System.currentTimeMillis()));
-        book.setAuthor("Yashavant Kanetkar");
-        book.setTitle("Written Test Questions In C Programming");
-        book.setImageUrl("http://api.androidhive.info/images/realm/5.png");
-        books.add(book);
-
-
-        for (Book b : books) {
-            // Persist your data easily
-            realm.beginTransaction();
-            realm.copyToRealmOrUpdate(b);
-            realm.commitTransaction();
+                break;
         }
-
-
     }
 }
