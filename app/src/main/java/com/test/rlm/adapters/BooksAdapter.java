@@ -79,9 +79,27 @@ public class BooksAdapter extends RealmRecyclerViewAdapter<Book, BooksAdapter.Ca
                 Book book = mRealmController.get(Book.class, position);
                 new BookDialog().show(context, "Edit Book", book, new BookDialog.BookDialogListener() {
                     @Override
-                    public void onOkClicked(Book book) {
+                    public void onOkClicked(final Book book) {
                         mRealmController.saveOrUpdate(book);
                         notifyDataSetChanged();
+
+                        /**
+                         * Un comment below code for the same operation in background thread
+                         */
+                      /*  new AsyncTask<Void, Void, Void>() {
+                            @Override
+                            protected Void doInBackground(Void... params) {
+                                mRealmController.saveOrUpdate(book);
+                                return null;
+                            }
+
+                            @Override
+                            protected void onPostExecute(Void aVoid) {
+                                super.onPostExecute(aVoid);
+
+                                notifyDataSetChanged();
+                            }
+                        }.execute();*/
                     }
 
                     @Override

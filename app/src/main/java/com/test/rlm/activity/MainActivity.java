@@ -1,6 +1,5 @@
 package com.test.rlm.activity;
 
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
@@ -81,13 +80,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 new BookDialog().show(this, "Add book", new BookDialog.BookDialogListener() {
                     @Override
                     public void onOkClicked(final Book book) {
-                       /* mRealmController.save(book);
+                        mRealmController.save(book);
                         adapter.notifyDataSetChanged();
-                        recycler.scrollToPosition(mRealmController.getAllRealm(Book.class).size() - 1);*/
+                        recycler.scrollToPosition(mRealmController.getAllRealm(Book.class).size() - 1);
 
                         /**
                          * Tried to do the same in background thread
                          */
+
+/*
                         new AsyncTask<Void, Void, Void>() {
                             @Override
                             protected Void doInBackground(Void... params) {
@@ -102,6 +103,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                 recycler.scrollToPosition(mRealmController.getAllRealm(Book.class).size() - 1);
                             }
                         }.execute();
+*/
 
                     }
 
