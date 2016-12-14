@@ -98,7 +98,8 @@ public class MainActivity extends AppCompatActivity {
                                     realm.commitTransaction();
 
                                     /**
-                                     * Tried to do the same in background thread. Uncommnet this line and add a book to see the crash
+                                     * Tried to do the same in background thread.  comment above 3 lines and
+                                     * Uncommnet below code and add a book to see the crash
                                      */
                                   /*  new AsyncTask<Void, Void, Void>() {
                                         @Override
