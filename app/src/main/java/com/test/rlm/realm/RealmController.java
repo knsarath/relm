@@ -5,15 +5,25 @@ import android.content.Context;
 
 import com.test.rlm.model.Book;
 
+import java.util.List;
+
 import io.realm.Realm;
 import io.realm.RealmConfiguration;
+import io.realm.RealmList;
 import io.realm.RealmObject;
 import io.realm.RealmResults;
+import io.realm.Sort;
 
 
 public class RealmController {
 
 
+    /**
+     * inititallize the realm . Do it in the application launch
+     *
+     * @param context
+     * @param dbVersion
+     */
     public static void init(Context context, Integer dbVersion) {
         Realm.init(context);
         RealmConfiguration realmConfiguration = new RealmConfiguration.Builder()
@@ -24,19 +34,17 @@ public class RealmController {
         Realm.setDefaultConfiguration(realmConfiguration);
     }
 
-    //clear all objects from given realm class(Table)
-    public void clearAll(Class<? extends RealmObject> clazz) {
-        Realm realm = Realm.getDefaultInstance();
-        realm.beginTransaction();
-        realm.delete(clazz);
-        realm.commitTransaction();
-        realm.close();
-    }
 
-    //find all objects in the Book.class
-    public RealmResults<Book> getBooks() {
+    /***
+     * //find all objects in the given table
+     *
+     * @param clazz class which extends RealmObject
+     * @return RealmResults of clazz.
+     */
+    public RealmResults<? extends RealmObject> getAll(Class<? extends RealmObject> clazz) {
         Realm realm = Realm.getDefaultInstance();
-        return realm.where(Book.class).findAll();
+        realm.close();
+        return realm.where(clazz).findAll();
     }
 
 
@@ -57,6 +65,11 @@ public class RealmController {
 
     }
 
+    /**
+     * save a single object to realm. will throw error if primary key already present
+     *
+     * @param book
+     */
     public void save(RealmObject book) {
         Realm realm = Realm.getDefaultInstance();
         realm.beginTransaction();
@@ -65,6 +78,11 @@ public class RealmController {
         realm.close();
     }
 
+    /**
+     * save a list of objects to realm. will throw error if primary key already present
+     *
+     * @param items
+     */
     public void saveAll(Iterable<? extends RealmObject> items) {
         Realm realm = Realm.getDefaultInstance();
         realm.beginTransaction();
@@ -72,6 +90,11 @@ public class RealmController {
         realm.commitTransaction();
     }
 
+    /**
+     * save a single of realm object. if the primary key field is already present , it will update all other fields of existing object
+     *
+     * @param book
+     */
     public void saveOrUpdate(RealmObject book) {
         Realm realm = Realm.getDefaultInstance();
         realm.beginTransaction();
@@ -80,6 +103,11 @@ public class RealmController {
         realm.close();
     }
 
+    /**
+     * save a list of realm objects. if the primary key field is already present , it will update the existing object (it will update all other fields)
+     *
+     * @param items
+     */
     public void saveAllOrUpdate(Iterable<? extends RealmObject> items) {
         Realm realm = Realm.getDefaultInstance();
         realm.beginTransaction();
@@ -87,6 +115,12 @@ public class RealmController {
         realm.commitTransaction();
     }
 
+    /**
+     * deletes a single object from realm by position
+     *
+     * @param aClass
+     * @param position
+     */
     public void delete(Class<? extends RealmObject> aClass, int position) {
         Realm realm = Realm.getDefaultInstance();
         realm.beginTransaction();
@@ -94,6 +128,34 @@ public class RealmController {
         realm.commitTransaction();
     }
 
+    /**
+     * find all objects in the given table sorted with a given field. Note: The returned result set is an in  memory copy of the actual result.
+     * so any further update will not immediately affect the actual realm data until you do a commit
+     *
+     * @param clazz
+     * @param fieldName
+     * @param sortOrder
+     * @param <E>
+     * @return
+     */
+    public <E extends RealmObject> RealmList<E> getAllSorted(Class<E> clazz, String fieldName, Sort sortOrder) {
+        Realm realm = Realm.getDefaultInstance();
+        final List<E> list = realm.copyFromRealm(realm.where(clazz).findAllSorted(fieldName, sortOrder));
+        realm.close();
+        RealmList<E> eRealmList = new RealmList<>();
+        eRealmList.addAll(list);
+        return eRealmList;
+    }
+
+
+    /**
+     * this will return a realm object by position and will return an in memory copy of the result object
+     *
+     * @param type
+     * @param position
+     * @param <E>
+     * @return
+     */
     public <E extends RealmObject> E get(Class<E> type, int position) {
         E e = null;
         Realm realm = Realm.getDefaultInstance();
@@ -104,5 +166,37 @@ public class RealmController {
         }
         realm.close();
         return e;
+    }
+
+
+    /**
+     * This method will return sorted result with a field.
+     * Note: the returned result set is not detached from realm so , the active realm instance is associated with the result set.
+     * any modification will affect the actual realm objects.
+     *
+     * @param clazz
+     * @param fieldName
+     * @param sortOrder
+     * @param <E>       class which extends RealmObject (A class representing a realm table)
+     * @return
+     */
+    public <E extends RealmObject> RealmResults<E> getAllSortedRealm(Class<E> clazz, String fieldName, Sort sortOrder) {
+        Realm realm = Realm.getDefaultInstance();
+        /**
+         * Note : the realm instance is not closed here
+         */
+        return realm.where(clazz).findAllSorted(fieldName, sortOrder);
+    }
+
+    /**
+     * clear all objects from given realm class(Table)
+     */
+
+    public void clearAll(Class<? extends RealmObject> clazz) {
+        Realm realm = Realm.getDefaultInstance();
+        realm.beginTransaction();
+        realm.delete(clazz);
+        realm.commitTransaction();
+        realm.close();
     }
 }

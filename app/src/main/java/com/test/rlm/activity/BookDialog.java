@@ -38,7 +38,7 @@ public class BookDialog {
          */
         if (book == null) {
             mBook = new Book();
-            mBook.setId(mRealmController.getBooks().size() + 1);
+            mBook.setId(mRealmController.getAll(Book.class).size() + 1);
         } else {
             mBook = book;
         }

@@ -16,6 +16,7 @@ import com.test.rlm.realm.RealmController;
 import java.util.ArrayList;
 
 import app.androidhive.info.realm.R;
+import io.realm.Sort;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     private BooksAdapter adapter;
@@ -60,7 +61,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         recycler.setLayoutManager(layoutManager);
 
         // create an empty adapter and add it to the recycler view
-        adapter = new BooksAdapter(this, mRealmController, mRealmController.getBooks());
+
+        /**
+         * read all books in sorted order of title
+         */
+
+        adapter = new BooksAdapter(this, mRealmController, mRealmController.getAllSortedRealm(Book.class, "title", Sort.ASCENDING));
         recycler.setAdapter(adapter);
     }
 
@@ -78,7 +84,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     public void onOkClicked(Book book) {
                         mRealmController.save(book);
                         adapter.notifyDataSetChanged();
-                        recycler.scrollToPosition(mRealmController.getBooks().size() - 1);
+                        recycler.scrollToPosition(mRealmController.getAll(Book.class).size() - 1);
 
                         /**
                          * Tried to do the same in background thread
@@ -94,7 +100,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                         protected void onPostExecute(Void aVoid) {
                                             super.onPostExecute(aVoid);
                                             adapter.notifyDataSetChanged();
-                                            recycler.scrollToPosition(mRealmController.getBooks().size() - 1);
+                                            recycler.scrollToPosition(mRealmController.getAll().size() - 1);
                                         }
                                     }.execute();*/
 
