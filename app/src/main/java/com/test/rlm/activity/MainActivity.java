@@ -1,15 +1,12 @@
 package com.test.rlm.activity;
 
-import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
-import android.widget.EditText;
 import android.widget.Toast;
 
 import com.test.rlm.adapters.BooksAdapter;
@@ -70,31 +67,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.fab:
-                View content = getLayoutInflater().inflate(R.layout.edit_item, null);
-                final EditText editTitle = (EditText) content.findViewById(R.id.title);
-                final EditText editAuthor = (EditText) content.findViewById(R.id.author);
-                final EditText editThumbnail = (EditText) content.findViewById(R.id.thumbnail);
-
-                final DialogInterface.OnClickListener OkClickListener = new DialogInterface.OnClickListener() {
+                BookDialog.show(this, "Add book", new BookDialog.BookDialogListener() {
                     @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        final Book book = new Book();
-                        book.setId(mRealmController.getBooks().size() + 1);
-                        book.setTitle(editTitle.getText().toString());
-                        book.setAuthor(editAuthor.getText().toString());
-                        book.setImageUrl(editThumbnail.getText().toString());
+                    public void onOkClicked(Book book) {
+                        mRealmController.save(book);
+                        adapter.notifyDataSetChanged();
+                        recycler.scrollToPosition(mRealmController.getBooks().size() - 1);
 
-                        if (editTitle.getText() == null || editTitle.getText().toString().equals("") || editTitle.getText().toString().equals(" ")) {
-                            Toast.makeText(MainActivity.this, "Entry not saved, missing title", Toast.LENGTH_SHORT).show();
-                        } else {
-                            // Persist your data easily
-                            mRealmController.save(book);
-                            adapter.notifyDataSetChanged();
-                            recycler.scrollToPosition(mRealmController.getBooks().size() - 1);
-
-                            /**
-                             * Tried to do the same in background thread
-                             */
+                        /**
+                         * Tried to do the same in background thread
+                         */
                                    /* new AsyncTask<Void, Void, Void>() {
                                         @Override
                                         protected Void doInBackground(Void... params) {
@@ -110,26 +92,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                         }
                                     }.execute();*/
 
-                        }
-
                     }
-
-                };
-                final DialogInterface.OnClickListener cancelClickListener = new DialogInterface.OnClickListener() {
 
                     @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss();
-                    }
-                };
+                    public void onCancelCliked() {
 
-                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-                builder.setView(content)
-                        .setTitle("Add book")
-                        .setPositiveButton(android.R.string.ok, OkClickListener)
-                        .setNegativeButton(android.R.string.cancel, cancelClickListener);
-                AlertDialog dialog = builder.create();
-                dialog.show();
+                    }
+                });
                 break;
         }
     }

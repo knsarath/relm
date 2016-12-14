@@ -70,6 +70,13 @@ public class RealmController {
         realm.close();
     }
 
+    public void saveAll(Iterable<? extends RealmObject> items) {
+        Realm realm = Realm.getDefaultInstance();
+        realm.beginTransaction();
+        realm.copyToRealm(items);
+        realm.commitTransaction();
+    }
+
     public void saveOrUpdate(RealmObject book) {
         Realm realm = Realm.getDefaultInstance();
         realm.beginTransaction();
@@ -78,20 +85,12 @@ public class RealmController {
         realm.close();
     }
 
-    public void saveAll(Iterable<? extends RealmObject> items) {
-        Realm realm = Realm.getDefaultInstance();
-        realm.beginTransaction();
-        realm.copyToRealm(items);
-        realm.commitTransaction();
-    }
-
     public void saveAllOrUpdate(Iterable<? extends RealmObject> items) {
         Realm realm = Realm.getDefaultInstance();
         realm.beginTransaction();
         realm.copyToRealmOrUpdate(items);
         realm.commitTransaction();
     }
-
 
     public void delete(Class<? extends RealmObject> aClass, int position) {
         Realm realm = Realm.getDefaultInstance();

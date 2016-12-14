@@ -6,7 +6,7 @@ import com.test.rlm.realm.RealmController;
 
 public class MyApplication extends Application {
 
-    private static final Integer DB_VERSION = 1;
+    private static final Integer DB_VERSION = 2;
 
     @Override
     public void onCreate() {

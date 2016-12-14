@@ -1,21 +1,19 @@
 package com.test.rlm.adapters;
 
 import android.content.Context;
-import android.content.DialogInterface;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
+import com.test.rlm.activity.BookDialog;
 import com.test.rlm.model.Book;
 import com.test.rlm.realm.RealmController;
 
@@ -76,41 +74,21 @@ public class BooksAdapter extends RealmRecyclerViewAdapter<Book, BooksAdapter.Ca
 
         //update single match from realm
         holder.card.setOnClickListener(new View.OnClickListener() {
-
             @Override
             public void onClick(View v) {
-                View content = inflater.inflate(R.layout.edit_item, null);
-                final EditText editTitle = (EditText) content.findViewById(R.id.title);
-                final EditText editAuthor = (EditText) content.findViewById(R.id.author);
-                final EditText editThumbnail = (EditText) content.findViewById(R.id.thumbnail);
+                Book book = mRealmController.get(Book.class, position);
+                BookDialog.show(context, "Edit Book", book, new BookDialog.BookDialogListener() {
+                    @Override
+                    public void onOkClicked(Book book) {
+                        mRealmController.saveOrUpdate(book);
+                        notifyDataSetChanged();
+                    }
 
-                editTitle.setText(book.getTitle());
-                editAuthor.setText(book.getAuthor());
-                editThumbnail.setText(book.getImageUrl());
+                    @Override
+                    public void onCancelCliked() {
 
-                AlertDialog.Builder builder = new AlertDialog.Builder(context);
-                builder.setView(content)
-                        .setTitle("Edit Book")
-                        .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                Book book = mRealmController.get(Book.class, position);
-                                book.setAuthor(editAuthor.getText().toString());
-                                book.setTitle(editTitle.getText().toString());
-                                book.setImageUrl(editThumbnail.getText().toString());
-                                mRealmController.saveOrUpdate(book);
-                                notifyDataSetChanged();
-                            }
-                        })
-                        .setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
-
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                dialog.dismiss();
-                            }
-                        });
-                AlertDialog dialog = builder.create();
-                dialog.show();
+                    }
+                });
             }
         });
 

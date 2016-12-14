@@ -17,7 +17,7 @@ public class DummyData {
         book.setImageUrl("http://api.androidhive.info/images/realm/1.png");
         books.add(book);
 
-        book = new Book();
+       /* book = new Book();
         book.setId((int) (2 + System.currentTimeMillis()));
         book.setAuthor("Itzik Ben-Gan");
         book.setTitle("Microsoft SQL Server 2012 T-SQL Fundamentals");
@@ -36,7 +36,7 @@ public class DummyData {
         book.setAuthor("Chad Fowler");
         book.setTitle("The Passionate Programmer: Creating a Remarkable Career in Software Development");
         book.setImageUrl("http://api.androidhive.info/images/realm/4.png");
-        books.add(book);
+        books.add(book);*/
         return books;
     }
 }
