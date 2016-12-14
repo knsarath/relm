@@ -24,11 +24,11 @@ public class RealmController {
         Realm.setDefaultConfiguration(realmConfiguration);
     }
 
-    //clear all objects from Book.class
-    public void clearAll() {
+    //clear all objects from given realm class(Table)
+    public void clearAll(Class<? extends RealmObject> clazz) {
         Realm realm = Realm.getDefaultInstance();
         realm.beginTransaction();
-        realm.delete(Book.class);
+        realm.delete(clazz);
         realm.commitTransaction();
         realm.close();
     }
@@ -39,16 +39,11 @@ public class RealmController {
         return realm.where(Book.class).findAll();
     }
 
-    //query a single item with the given id
-    public Book getBook(String id) {
-        Realm realm = Realm.getDefaultInstance();
-        return realm.where(Book.class).equalTo("id", id).findFirst();
-    }
 
     //check if Book.class is empty
-    public boolean hasBooks() {
+    public boolean hasBooks(Class<? extends RealmObject> clazz) {
         Realm realm = Realm.getDefaultInstance();
-        return !realm.where(Book.class).findAll().isEmpty();
+        return !realm.where(clazz).findAll().isEmpty();
     }
 
     //query example
