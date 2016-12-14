@@ -3,8 +3,6 @@ package com.test.rlm.realm;
 
 import android.content.Context;
 
-import com.test.rlm.model.Book;
-
 import java.util.List;
 
 import io.realm.Realm;
@@ -35,35 +33,101 @@ public class RealmController {
     }
 
 
+    //==========================READS ============================//
+
+
+    /**
+     * read all objects from a table. It returns an in-memory copy of results , which is detached from the realm instance.
+     *
+     * @param clazz
+     * @param <E>
+     * @return
+     */
+    public <E extends RealmObject> List<E> getAll(Class<E> clazz) {
+        Realm realm = Realm.getDefaultInstance();
+        final RealmResults<E> realmObjects = realm.where(clazz).findAll();
+        final List<E> list = realm.copyFromRealm(realmObjects);
+        realm.close();
+        return list;
+    }
+
+
     /***
-     * //find all objects in the given table
+     * //find all objects in the given table. Note: result is not detached from realm.
+     * So it returns a actual result set from realm with a valid realm instance associated with it
      *
      * @param clazz class which extends RealmObject
      * @return RealmResults of clazz.
      */
-    public RealmResults<? extends RealmObject> getAll(Class<? extends RealmObject> clazz) {
+    public <E extends RealmObject> RealmResults<E> getAllRealm(Class<E> clazz) {
         Realm realm = Realm.getDefaultInstance();
-        realm.close();
         return realm.where(clazz).findAll();
+
     }
 
 
-    //check if Book.class is empty
-    public boolean hasBooks(Class<? extends RealmObject> clazz) {
+    /**
+     * find all objects in the given table sorted with a given field. Note: The returned result set is an in  memory copy of the actual result.
+     * so any further update will not immediately affect the actual realm data until you do a commit
+     *
+     * @param clazz
+     * @param fieldName
+     * @param sortOrder
+     * @param <E>
+     * @return
+     */
+    public <E extends RealmObject> RealmList<E> getAllSorted(Class<E> clazz, String fieldName, Sort sortOrder) {
         Realm realm = Realm.getDefaultInstance();
-        return !realm.where(clazz).findAll().isEmpty();
+        final List<E> list = realm.copyFromRealm(realm.where(clazz).findAllSorted(fieldName, sortOrder));
+        realm.close();
+        RealmList<E> eRealmList = new RealmList<>();
+        eRealmList.addAll(list);
+        return eRealmList;
     }
 
-    //query example
-    public RealmResults<Book> queryedBooks() {
+
+    /**
+     * This method will return sorted result with a field.
+     * Note: the returned result set is not detached from realm so , the active realm instance is associated with the result set.
+     * any modification will affect the actual realm objects.
+     *
+     * @param clazz
+     * @param fieldName
+     * @param sortOrder
+     * @param <E>       class which extends RealmObject (A class representing a realm table)
+     * @return
+     */
+    public <E extends RealmObject> RealmResults<E> getAllSortedRealm(Class<E> clazz, String fieldName, Sort sortOrder) {
         Realm realm = Realm.getDefaultInstance();
-        return realm.where(Book.class)
-                .contains("author", "Author 0")
-                .or()
-                .contains("title", "Realm")
-                .findAll();
-
+        /**
+         * Note : the realm instance is not closed here
+         */
+        return realm.where(clazz).findAllSorted(fieldName, sortOrder);
     }
+
+
+    /**
+     * this will return a realm object by position and will return an in-memory copy of the result object
+     *
+     * @param type
+     * @param position
+     * @param <E>
+     * @return
+     */
+    public <E extends RealmObject> E get(Class<E> type, int position) {
+        E e = null;
+        Realm realm = Realm.getDefaultInstance();
+        final RealmResults<E> realmResults = realm.where(type).findAll();
+        final E result = realmResults.get(position);
+        if (result != null) {
+            e = realm.copyFromRealm(result);
+        }
+        realm.close();
+        return e;
+    }
+
+
+    //=======================  WRITES ======================
 
     /**
      * save a single object to realm. will throw error if primary key already present
@@ -128,70 +192,10 @@ public class RealmController {
         realm.commitTransaction();
     }
 
-    /**
-     * find all objects in the given table sorted with a given field. Note: The returned result set is an in  memory copy of the actual result.
-     * so any further update will not immediately affect the actual realm data until you do a commit
-     *
-     * @param clazz
-     * @param fieldName
-     * @param sortOrder
-     * @param <E>
-     * @return
-     */
-    public <E extends RealmObject> RealmList<E> getAllSorted(Class<E> clazz, String fieldName, Sort sortOrder) {
-        Realm realm = Realm.getDefaultInstance();
-        final List<E> list = realm.copyFromRealm(realm.where(clazz).findAllSorted(fieldName, sortOrder));
-        realm.close();
-        RealmList<E> eRealmList = new RealmList<>();
-        eRealmList.addAll(list);
-        return eRealmList;
-    }
-
-
-    /**
-     * this will return a realm object by position and will return an in memory copy of the result object
-     *
-     * @param type
-     * @param position
-     * @param <E>
-     * @return
-     */
-    public <E extends RealmObject> E get(Class<E> type, int position) {
-        E e = null;
-        Realm realm = Realm.getDefaultInstance();
-        final RealmResults<E> realmResults = realm.where(type).findAll();
-        final E result = realmResults.get(position);
-        if (result != null) {
-            e = realm.copyFromRealm(result);
-        }
-        realm.close();
-        return e;
-    }
-
-
-    /**
-     * This method will return sorted result with a field.
-     * Note: the returned result set is not detached from realm so , the active realm instance is associated with the result set.
-     * any modification will affect the actual realm objects.
-     *
-     * @param clazz
-     * @param fieldName
-     * @param sortOrder
-     * @param <E>       class which extends RealmObject (A class representing a realm table)
-     * @return
-     */
-    public <E extends RealmObject> RealmResults<E> getAllSortedRealm(Class<E> clazz, String fieldName, Sort sortOrder) {
-        Realm realm = Realm.getDefaultInstance();
-        /**
-         * Note : the realm instance is not closed here
-         */
-        return realm.where(clazz).findAllSorted(fieldName, sortOrder);
-    }
 
     /**
      * clear all objects from given realm class(Table)
      */
-
     public void clearAll(Class<? extends RealmObject> clazz) {
         Realm realm = Realm.getDefaultInstance();
         realm.beginTransaction();

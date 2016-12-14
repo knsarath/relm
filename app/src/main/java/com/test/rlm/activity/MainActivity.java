@@ -1,5 +1,6 @@
 package com.test.rlm.activity;
 
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
@@ -16,7 +17,6 @@ import com.test.rlm.realm.RealmController;
 import java.util.ArrayList;
 
 import app.androidhive.info.realm.R;
-import io.realm.Sort;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     private BooksAdapter adapter;
@@ -65,8 +65,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         /**
          * read all books in sorted order of title
          */
-
-        adapter = new BooksAdapter(this, mRealmController, mRealmController.getAllSortedRealm(Book.class, "title", Sort.ASCENDING));
+        adapter = new BooksAdapter(this, mRealmController, mRealmController.getAllRealm(Book.class));
         recycler.setAdapter(adapter);
     }
 
@@ -81,28 +80,28 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.fab:
                 new BookDialog().show(this, "Add book", new BookDialog.BookDialogListener() {
                     @Override
-                    public void onOkClicked(Book book) {
-                        mRealmController.save(book);
+                    public void onOkClicked(final Book book) {
+                       /* mRealmController.save(book);
                         adapter.notifyDataSetChanged();
-                        recycler.scrollToPosition(mRealmController.getAll(Book.class).size() - 1);
+                        recycler.scrollToPosition(mRealmController.getAllRealm(Book.class).size() - 1);*/
 
                         /**
                          * Tried to do the same in background thread
                          */
-                                   /* new AsyncTask<Void, Void, Void>() {
-                                        @Override
-                                        protected Void doInBackground(Void... params) {
-                                            mRealmController.save(book);
-                                            return null;
-                                        }
+                        new AsyncTask<Void, Void, Void>() {
+                            @Override
+                            protected Void doInBackground(Void... params) {
+                                mRealmController.save(book);
+                                return null;
+                            }
 
-                                        @Override
-                                        protected void onPostExecute(Void aVoid) {
-                                            super.onPostExecute(aVoid);
-                                            adapter.notifyDataSetChanged();
-                                            recycler.scrollToPosition(mRealmController.getAll().size() - 1);
-                                        }
-                                    }.execute();*/
+                            @Override
+                            protected void onPostExecute(Void aVoid) {
+                                super.onPostExecute(aVoid);
+                                adapter.notifyDataSetChanged();
+                                recycler.scrollToPosition(mRealmController.getAllRealm(Book.class).size() - 1);
+                            }
+                        }.execute();
 
                     }
 
