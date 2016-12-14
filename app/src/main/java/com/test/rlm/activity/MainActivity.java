@@ -38,7 +38,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         setSupportActionBar(toolbar);
 
         setupRecycler();
-        setRealmData();
+
+        final boolean sampleDataAlreadyAdded = Pref.isDummyDataAdded(this);
+        if (!sampleDataAlreadyAdded) {
+            setRealmData();
+            Pref.dummyDataAdded(this, true);
+        }
+
 
         Toast.makeText(this, "Press card item for edit, long press to remove item", Toast.LENGTH_LONG).show();
 
@@ -67,7 +73,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.fab:
-                BookDialog.show(this, "Add book", new BookDialog.BookDialogListener() {
+                new BookDialog().show(this, "Add book", new BookDialog.BookDialogListener() {
                     @Override
                     public void onOkClicked(Book book) {
                         mRealmController.save(book);

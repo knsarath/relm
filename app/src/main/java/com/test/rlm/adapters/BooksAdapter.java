@@ -77,7 +77,7 @@ public class BooksAdapter extends RealmRecyclerViewAdapter<Book, BooksAdapter.Ca
             @Override
             public void onClick(View v) {
                 Book book = mRealmController.get(Book.class, position);
-                BookDialog.show(context, "Edit Book", book, new BookDialog.BookDialogListener() {
+                new BookDialog().show(context, "Edit Book", book, new BookDialog.BookDialogListener() {
                     @Override
                     public void onOkClicked(Book book) {
                         mRealmController.saveOrUpdate(book);
