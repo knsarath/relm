@@ -32,7 +32,6 @@ public class RealmController {
         Realm.setDefaultConfiguration(realmConfiguration);
     }
 
-
     //==========================READS ============================//
 
 
