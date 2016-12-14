@@ -98,9 +98,9 @@ public class MainActivity extends AppCompatActivity {
                                     realm.commitTransaction();
 
                                     /**
-                                     * Tried to do the same in background thread
+                                     * Tried to do the same in background thread. Uncommnet this line and add a book to see the crash
                                      */
-                                    /*new AsyncTask<Void, Void, Void>() {
+                                  /*  new AsyncTask<Void, Void, Void>() {
                                         @Override
                                         protected Void doInBackground(Void... params) {
                                             realm.beginTransaction();
