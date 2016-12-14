@@ -21,9 +21,7 @@ import com.test.rlm.realm.RealmController;
 
 import app.androidhive.info.realm.R;
 import io.realm.OrderedRealmCollection;
-import io.realm.Realm;
 import io.realm.RealmRecyclerViewAdapter;
-import io.realm.RealmResults;
 
 
 public class BooksAdapter extends RealmRecyclerViewAdapter<Book, BooksAdapter.CardViewHolder> {
@@ -32,6 +30,10 @@ public class BooksAdapter extends RealmRecyclerViewAdapter<Book, BooksAdapter.Ca
 
     public BooksAdapter(@NonNull Context context, RealmController realmController, @Nullable OrderedRealmCollection<Book> data) {
         super(context, data, true);
+        mRealmController = realmController;
+        if (mRealmController == null) {
+            throw new RuntimeException("RealmController cannot be null in BooksAdapter");
+        }
     }
 
     // create new views (invoked by the layout manager)
@@ -44,14 +46,8 @@ public class BooksAdapter extends RealmRecyclerViewAdapter<Book, BooksAdapter.Ca
 
     @Override
     public void onBindViewHolder(CardViewHolder holder, final int position) {
-
-        final Realm realm = Realm.getDefaultInstance();
-
         // get the article
         final Book book = getItem(position);
-        // cast the generic view holder to our specific one
-
-
         // set the title and the snippet
         holder.textTitle.setText(book.getTitle());
         holder.textAuthor.setText(book.getAuthor());
@@ -70,19 +66,8 @@ public class BooksAdapter extends RealmRecyclerViewAdapter<Book, BooksAdapter.Ca
         holder.card.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
-
-                RealmResults<Book> results = realm.where(Book.class).findAll();
-                // Get the book title to show it in toast message
-                Book b = results.get(position);
-                String title = b.getTitle();
-                // All changes to data must happen in a transaction
-                realm.beginTransaction();
-                // remove single match
-                results.deleteFromRealm(position);
-                realm.commitTransaction();
-                if (results.size() == 0) {
-                    //   Prefs.with(context).setPreLoad(false);
-                }
+                final String title = getItem(position).getTitle();
+                mRealmController.delete(Book.class, position);
                 notifyDataSetChanged();
                 Toast.makeText(context, title + " is removed from Realm", Toast.LENGTH_SHORT).show();
                 return false;
@@ -109,14 +94,11 @@ public class BooksAdapter extends RealmRecyclerViewAdapter<Book, BooksAdapter.Ca
                         .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-
-                                RealmResults<Book> results = realm.where(Book.class).findAll();
-                                realm.beginTransaction();
-                                results.get(position).setAuthor(editAuthor.getText().toString());
-                                results.get(position).setTitle(editTitle.getText().toString());
-                                results.get(position).setImageUrl(editThumbnail.getText().toString());
-                                realm.commitTransaction();
-
+                                Book book = mRealmController.get(Book.class, position);
+                                book.setAuthor(editAuthor.getText().toString());
+                                book.setTitle(editTitle.getText().toString());
+                                book.setImageUrl(editThumbnail.getText().toString());
+                                mRealmController.saveOrUpdate(book);
                                 notifyDataSetChanged();
                             }
                         })

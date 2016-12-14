@@ -93,4 +93,22 @@ public class RealmController {
     }
 
 
+    public void delete(Class<? extends RealmObject> aClass, int position) {
+        Realm realm = Realm.getDefaultInstance();
+        realm.beginTransaction();
+        realm.where(aClass).findAll().deleteFromRealm(position);
+        realm.commitTransaction();
+    }
+
+    public <E extends RealmObject> E get(Class<E> type, int position) {
+        E e = null;
+        Realm realm = Realm.getDefaultInstance();
+        final RealmResults<E> realmResults = realm.where(type).findAll();
+        final E result = realmResults.get(position);
+        if (result != null) {
+            e = realm.copyFromRealm(result);
+        }
+        realm.close();
+        return e;
+    }
 }
