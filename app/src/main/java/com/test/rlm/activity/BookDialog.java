@@ -43,10 +43,16 @@ public class BookDialog {
         final DialogInterface.OnClickListener okClickListener = new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
+                /**
+                 * if no book obect is passed through constructor , create a new book object with a new ID.
+                 * if already one book object is passed through constructor , dont create a new Book object , but just update the fileds (Keep the id of the book because it is the primary key)
+                 */
                 if (book == null) {
                     final Book book = new Book();
                     book.setId(mRealmController.getBooks().size() + 1);
                 }
+
+
                 book.setTitle(editTitle.getText().toString());
                 book.setAuthor(editAuthor.getText().toString());
                 book.setImageUrl(editThumbnail.getText().toString());
