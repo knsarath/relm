@@ -5,6 +5,7 @@ import android.content.Context;
 
 import java.util.List;
 
+import io.realm.Case;
 import io.realm.Realm;
 import io.realm.RealmChangeListener;
 import io.realm.RealmConfiguration;
@@ -31,6 +32,50 @@ public class RealmController {
                 .deleteRealmIfMigrationNeeded()
                 .build();
         Realm.setDefaultConfiguration(realmConfiguration);
+    }
+
+
+    /**
+     * select query with a given field value contains the given constraint
+     *
+     * @param clazz         table
+     * @param field         which field to be searched
+     * @param constraint    search query
+     * @param caseSensitive search is case SENSITIVE or INSENSITIVE
+     * @param <E>
+     * @return List of objects of type E
+     */
+    public <E extends RealmObject> List<E> selectAllContains(Class<E> clazz, String field, String constraint, Case caseSensitive) {
+        Realm realm = Realm.getDefaultInstance();
+        final RealmResults<E> books = realm.where(clazz).contains(field, constraint, caseSensitive).findAll();
+        final List<E> fromRealm = realm.copyFromRealm(books);
+        realm.close();
+        return fromRealm;
+    }
+
+    /**
+     * asynchronous version of selectAllContains.
+     *
+     * @param clazz         table
+     * @param field         which field to be searched
+     * @param constraint    search query
+     * @param caseSensitive search is case SENSITIVE or INSENSITIVE
+     * @param callback      {{@link Callback}}
+     * @param <E>
+     */
+    public <E extends RealmObject> void selectAllContainsAsync(Class<E> clazz, String field, String constraint, Case caseSensitive, final Callback<List<E>> callback) {
+        final Realm realm = Realm.getDefaultInstance();
+        final RealmResults<E> query = realm.where(clazz).contains(field, constraint, caseSensitive).findAllAsync();
+        query.addChangeListener(new RealmChangeListener<RealmResults<E>>() {
+            @Override
+            public void onChange(RealmResults<E> element) {
+                if (element.isLoaded()) {
+                    final List<E> list = realm.copyFromRealm(element);
+                    realm.close();
+                    callback.onSuccess(list);
+                }
+            }
+        });
     }
 
 

@@ -21,20 +21,16 @@ import java.util.List;
 
 import app.androidhive.info.realm.R;
 import io.realm.Case;
-import io.realm.Realm;
-import io.realm.RealmResults;
 
 
 public class BooksAdapter extends RecyclerView.Adapter<BooksAdapter.CardViewHolder> implements Filterable {
 
     private RealmController mRealmController;
-    private List<Book> mBookArrayList = new ArrayList<>();
-    private List<Book> mFilteredList = new ArrayList<>();
+    private List<Book> mBookList = new ArrayList<>();
 
     public BooksAdapter(RealmController realmController, ArrayList<Book> bookArrayList) {
         mRealmController = realmController;
-        mBookArrayList = bookArrayList;
-        mFilteredList = bookArrayList;
+        mBookList = bookArrayList;
     }
 
     // create new views (invoked by the layout manager)
@@ -48,7 +44,7 @@ public class BooksAdapter extends RecyclerView.Adapter<BooksAdapter.CardViewHold
     @Override
     public void onBindViewHolder(final CardViewHolder holder, final int position) {
         // get the article
-        final Book book = mFilteredList.get(position);
+        final Book book = mBookList.get(position);
         // set the title and the snippet
         holder.textTitle.setText(book.getTitle());
         holder.textAuthor.setText(book.getAuthor());
@@ -67,7 +63,7 @@ public class BooksAdapter extends RecyclerView.Adapter<BooksAdapter.CardViewHold
         holder.card.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
-                final String title = mFilteredList.get(position).getTitle();
+                final String title = mBookList.get(position).getTitle();
                 mRealmController.delete(Book.class, "id", book.getId());
                 notifyDataSetChanged();
                 Toast.makeText(holder.itemView.getContext(), title + " is removed from Realm", Toast.LENGTH_SHORT).show();
@@ -85,24 +81,6 @@ public class BooksAdapter extends RecyclerView.Adapter<BooksAdapter.CardViewHold
                     public void onOkClicked(final Book book) {
                         mRealmController.saveOrUpdate(book);
                         notifyDataSetChanged();
-
-                        /**
-                         * Un comment below code for the same operation in background thread
-                         */
-                      /*  new AsyncTask<Void, Void, Void>() {
-                            @Override
-                            protected Void doInBackground(Void... params) {
-                                mRealmController.saveOrUpdate(book);
-                                return null;
-                            }
-
-                            @Override
-                            protected void onPostExecute(Void aVoid) {
-                                super.onPostExecute(aVoid);
-
-                                notifyDataSetChanged();
-                            }
-                        }.execute();*/
                     }
 
                     @Override
@@ -117,7 +95,7 @@ public class BooksAdapter extends RecyclerView.Adapter<BooksAdapter.CardViewHold
 
     @Override
     public int getItemCount() {
-        return mFilteredList.size();
+        return mBookList.size();
     }
 
 
@@ -145,27 +123,31 @@ public class BooksAdapter extends RecyclerView.Adapter<BooksAdapter.CardViewHold
         return new Filter() {
             @Override
             protected FilterResults performFiltering(CharSequence constraint) {
-                FilterResults filterResults = new FilterResults();
+                final FilterResults filterResults = new FilterResults();
+                List<Book> tempList = new ArrayList<>();
                 if (constraint != null && constraint.length() > 0) {
-                    List<Book> tempList = new ArrayList<Book>();
-
-                    Realm realm = Realm.getDefaultInstance();
-                    final RealmResults<Book> books = realm.where(Book.class).contains("title", constraint.toString(), Case.INSENSITIVE).findAll();
-                    tempList = realm.copyFromRealm(books);
-                    filterResults.count = tempList.size();
-                    filterResults.values = tempList;
+                    /**
+                     * select all books with title contains the search query
+                     */
+                    tempList = mRealmController.selectAllContains(Book.class, "title", constraint.toString(), Case.INSENSITIVE);
+                    // since performFiltering method already is in seperate thread, no need for selectAllContainsAsync
                 } else {
-                    filterResults.count = mBookArrayList.size();
-                    filterResults.values = mBookArrayList;
+                    /**
+                     * if(search query is empty , select all items from db
+                     */
+                    tempList = mRealmController.getAll(Book.class);
                 }
-
+                filterResults.values = tempList;
+                filterResults.count = tempList.size();
                 return filterResults;
             }
 
             @Override
             protected void publishResults(CharSequence constraint, FilterResults results) {
-                mFilteredList = (List<Book>) results.values;
-                notifyDataSetChanged();
+                if (results.values != null) {
+                    mBookList = (List<Book>) results.values;
+                    notifyDataSetChanged();
+                }
             }
         };
     }
