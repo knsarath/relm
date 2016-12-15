@@ -44,8 +44,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         final boolean sampleDataAlreadyAdded = Pref.isDummyDataAdded(this);
         if (!sampleDataAlreadyAdded) {
-            setRealmData();
-            Pref.dummyDataAdded(this, true);
+            final ArrayList<Book> dummyBooks = DummyData.getDummyBooks();
+            /**
+             * save dummy books to db in background thread
+             */
+            mRealmController.saveAllAsync(dummyBooks, new RealmController.WriteCallback() {
+                @Override
+                public void onSuccess() {
+                    Pref.dummyDataAdded(MainActivity.this, true); // on success set preference value to indicate dummy data has already been added. So next time it wont add again
+                }
+
+                @Override
+                public void onError(Throwable error) {
+                    Log.e(TAG, error.getMessage());
+                }
+            });
+
         }
 
 
@@ -84,10 +98,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     }
 
-    private void setRealmData() {
-        final ArrayList<Book> dummyBooks = DummyData.getDummyBooks();
-        mRealmController.saveAllOrUpdate(dummyBooks);
-    }
 
     @Override
     public void onClick(View v) {

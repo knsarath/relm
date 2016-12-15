@@ -81,7 +81,9 @@ public class RealmController {
                 if (results.isLoaded()) { // isLoaded is true when the query is completed and all results are available
                     final List<E> copyFromRealm = realm.copyFromRealm(results);
                     realm.close();
-                    listCallback.onSuccess(copyFromRealm);
+                    if (listCallback != null) {
+                        listCallback.onSuccess(copyFromRealm);
+                    }
                 }
             }
         });
@@ -117,7 +119,9 @@ public class RealmController {
             @Override
             public void onChange(RealmResults<E> results) {
                 if (results.isLoaded()) { // isLoaded is true when the query is completed and all results are available
-                    listCallback.onSuccess(results);
+                    if (listCallback != null) {
+                        listCallback.onSuccess(results);
+                    }
                 }
             }
         });
@@ -165,7 +169,9 @@ public class RealmController {
                     realm.close();
                     RealmList<E> finalResult = new RealmList<>();
                     finalResult.addAll(realm.copyFromRealm(results));
-                    callback.onSuccess(finalResult);
+                    if (callback != null) {
+                        callback.onSuccess(finalResult);
+                    }
                 }
             }
         });
@@ -210,7 +216,9 @@ public class RealmController {
             @Override
             public void onChange(RealmResults<E> element) {
                 if (element.isLoaded()) {
-                    callback.onSuccess(element);
+                    if (callback != null) {
+                        callback.onSuccess(element);
+                    }
                 }
             }
         });
@@ -300,6 +308,38 @@ public class RealmController {
         realm.copyToRealm(items);
         realm.commitTransaction();
     }
+
+    /**
+     * save a list of objects to realm.
+     * This will be executed in separate thread
+     * will throw error if primary key already present
+     * @param items
+     * @param callback {{@link WriteCallback to get notified when write completes }}
+     */
+    public void saveAllAsync(final Iterable<? extends RealmObject> items, final WriteCallback callback) {
+        Realm realm = Realm.getDefaultInstance();
+        realm.executeTransactionAsync(new Realm.Transaction() {
+            @Override
+            public void execute(Realm realm) {
+                realm.copyToRealm(items);
+            }
+        }, new Realm.Transaction.OnSuccess() {
+            @Override
+            public void onSuccess() {
+                if (callback != null) {
+                    callback.onSuccess();
+                }
+            }
+        }, new Realm.Transaction.OnError() {
+            @Override
+            public void onError(Throwable error) {
+                if (callback != null) {
+                    callback.onError(error);
+                }
+            }
+        });
+    }
+
 
     /**
      * save a single of realm object. if the primary key field is already present , it will update all other fields of existing object
