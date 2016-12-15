@@ -271,18 +271,19 @@ public class RealmController {
 
 
     /**
-     * this will return a realm object by position and will return an in-memory copy of the result object
+     * this will return a realm object by field matching given value .
+     * Finds the first object that fulfills the query conditions.
+     * will return an in-memory copy of the result object
      *
-     * @param type
-     * @param position
      * @param <E>
-     * @return
+     * @param type
+     * @param field
+     * @param value @return
      */
-    public <E extends RealmObject> E get(Class<E> type, int position) {
+    public <E extends RealmObject> E get(Class<E> type, String field, int value) {
         E e = null;
         Realm realm = Realm.getDefaultInstance();
-        final RealmResults<E> realmResults = realm.where(type).findAll();
-        final E result = realmResults.get(position);
+        final E result = realm.where(type).equalTo(field, value).findFirst();
         if (result != null) {
             e = realm.copyFromRealm(result);
         }

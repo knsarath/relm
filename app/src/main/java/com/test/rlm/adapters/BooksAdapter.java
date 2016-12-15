@@ -28,9 +28,9 @@ public class BooksAdapter extends RecyclerView.Adapter<BooksAdapter.CardViewHold
     private RealmController mRealmController;
     private List<Book> mBookList = new ArrayList<>();
 
-    public BooksAdapter(RealmController realmController, ArrayList<Book> bookArrayList) {
+    public BooksAdapter(RealmController realmController) {
         mRealmController = realmController;
-        mBookList = bookArrayList;
+        mBookList = mRealmController.getAll(Book.class);
     }
 
     // create new views (invoked by the layout manager)
@@ -59,37 +59,6 @@ public class BooksAdapter extends RecyclerView.Adapter<BooksAdapter.CardViewHold
                     .into(holder.imageBackground);
         }
 
-        //remove single match from realm
-        holder.card.setOnLongClickListener(new View.OnLongClickListener() {
-            @Override
-            public boolean onLongClick(View v) {
-                final String title = mBookList.get(position).getTitle();
-                mRealmController.delete(Book.class, "id", book.getId());
-                notifyDataSetChanged();
-                Toast.makeText(holder.itemView.getContext(), title + " is removed from Realm", Toast.LENGTH_SHORT).show();
-                return false;
-            }
-        });
-
-        //update single match from realm
-        holder.card.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Book book = mRealmController.get(Book.class, position);
-                new BookDialog().show(holder.itemView.getContext(), "Edit Book", book, new BookDialog.BookDialogListener() {
-                    @Override
-                    public void onOkClicked(final Book book) {
-                        mRealmController.saveOrUpdate(book);
-                        notifyDataSetChanged();
-                    }
-
-                    @Override
-                    public void onCancelCliked() {
-
-                    }
-                });
-            }
-        });
 
     }
 
@@ -98,8 +67,12 @@ public class BooksAdapter extends RecyclerView.Adapter<BooksAdapter.CardViewHold
         return mBookList.size();
     }
 
+    public void refresh() {
+        getFilter().filter(""); // refresh the dataset by searching with an empty string. because searching with empty string will fetch all items from db
+    }
 
-    public static class CardViewHolder extends RecyclerView.ViewHolder {
+
+    public class CardViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener, View.OnLongClickListener {
 
         public CardView card;
         public TextView textTitle;
@@ -115,6 +88,36 @@ public class BooksAdapter extends RecyclerView.Adapter<BooksAdapter.CardViewHold
             textAuthor = (TextView) itemView.findViewById(R.id.text_books_author);
             textDescription = (TextView) itemView.findViewById(R.id.text_books_description);
             imageBackground = (ImageView) itemView.findViewById(R.id.image_background);
+            card.setOnClickListener(this);
+            card.setOnLongClickListener(this);
+        }
+
+        //update single match from realm
+        @Override
+        public void onClick(View v) {
+            Book book = mRealmController.get(Book.class, "id", mBookList.get(getAdapterPosition()).getId());
+            new BookDialog().show(itemView.getContext(), "Edit Book", book, new BookDialog.BookDialogListener() {
+                @Override
+                public void onOkClicked(final Book book) {
+                    mRealmController.saveOrUpdate(book);
+                    refresh();
+
+                }
+
+                @Override
+                public void onCancelCliked() {
+
+                }
+            });
+        }
+
+        @Override
+        public boolean onLongClick(View v) {
+            final String title = mBookList.get(getAdapterPosition()).getTitle();
+            mRealmController.delete(Book.class, "id", mBookList.get(getAdapterPosition()).getId());
+            Toast.makeText(itemView.getContext(), title + " is removed from Realm", Toast.LENGTH_SHORT).show();
+            refresh();
+            return false;
         }
     }
 

@@ -13,6 +13,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.View;
+import android.widget.Filter;
 import android.widget.Toast;
 
 import com.test.rlm.adapters.BooksAdapter;
@@ -94,7 +95,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mRealmController.getAllSortedAsync(Book.class, "title", Sort.ASCENDING, new RealmController.Callback<RealmList<Book>>() {
             @Override
             public void onSuccess(RealmList<Book> result) {
-                adapter = new BooksAdapter(mRealmController, new ArrayList<>(result));
+                adapter = new BooksAdapter(mRealmController);
                 recycler.setAdapter(adapter);
             }
 
@@ -117,8 +118,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         mRealmController.saveAsync(book, new RealmController.WriteCallback() {
                             @Override
                             public void onSuccess() {
-                                adapter.notifyDataSetChanged();
-                                recycler.scrollToPosition(mRealmController.getAllRealm(Book.class).size() - 1);
+                                adapter.refresh();
                             }
 
                             @Override
@@ -157,7 +157,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public boolean onQueryTextChange(String newText) {
-        adapter.getFilter().filter(newText);
+        adapter.getFilter().filter(newText, new Filter.FilterListener() {
+            @Override
+            public void onFilterComplete(int count) {
+                recycler.scrollToPosition(0);
+            }
+        });
         return true;
     }
 }
