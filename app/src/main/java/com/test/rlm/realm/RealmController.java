@@ -186,6 +186,30 @@ public class RealmController {
         return realm.where(clazz).findAllSorted(fieldName, sortOrder);
     }
 
+    /**
+     * This method will return sorted result with a field . This will run in a background thread
+     * Note: the returned result set is not detached from realm so , the active realm instance is associated with the result set.
+     * any modification will affect the actual realm objects.
+     *
+     * @param clazz
+     * @param fieldName
+     * @param sortOrder
+     * @param callback {@link Callback} to return the results
+     * @param <E>
+     */
+    public <E extends RealmObject> void getAllSortedRealmAsync(Class<E> clazz, String fieldName, Sort sortOrder, final Callback<RealmResults<E>> callback) {
+        Realm realm = Realm.getDefaultInstance();
+        final RealmResults<E> allSortedAsync = realm.where(clazz).findAllSortedAsync(fieldName, sortOrder);
+        allSortedAsync.addChangeListener(new RealmChangeListener<RealmResults<E>>() {
+            @Override
+            public void onChange(RealmResults<E> element) {
+                if (element.isLoaded()) {
+                    callback.onSuccess(element);
+                }
+            }
+        });
+    }
+
 
     /**
      * this will return a realm object by position and will return an in-memory copy of the result object
