@@ -6,6 +6,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
@@ -95,31 +96,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 new BookDialog().show(this, "Add book", new BookDialog.BookDialogListener() {
                     @Override
                     public void onOkClicked(final Book book) {
-                        mRealmController.save(book);
-                        adapter.notifyDataSetChanged();
-                        recycler.scrollToPosition(mRealmController.getAllRealm(Book.class).size() - 1);
-
-                        /**
-                         * Tried to do the same in background thread
-                         */
-
-/*
-                        new AsyncTask<Void, Void, Void>() {
+                        mRealmController.saveAsync(book, new RealmController.WriteCallback() {
                             @Override
-                            protected Void doInBackground(Void... params) {
-                                mRealmController.save(book);
-                                return null;
-                            }
-
-                            @Override
-                            protected void onPostExecute(Void aVoid) {
-                                super.onPostExecute(aVoid);
+                            public void onSuccess() {
                                 adapter.notifyDataSetChanged();
                                 recycler.scrollToPosition(mRealmController.getAllRealm(Book.class).size() - 1);
                             }
-                        }.execute();
-*/
 
+                            @Override
+                            public void onError(Throwable error) {
+                                Log.e(TAG, error.getMessage());
+                            }
+                        });
                     }
 
                     @Override

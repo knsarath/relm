@@ -70,7 +70,7 @@ public class BookDialog {
                     }
 
                 }
-
+                dialog.dismiss();
             }
 
         };

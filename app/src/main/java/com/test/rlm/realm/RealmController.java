@@ -40,6 +40,12 @@ public class RealmController {
         void onError();
     }
 
+    public interface WriteCallback {
+        void onSuccess();
+
+        void onError(Throwable error);
+    }
+
 
     //==========================READS ============================//
 
@@ -194,7 +200,7 @@ public class RealmController {
      * @param clazz
      * @param fieldName
      * @param sortOrder
-     * @param callback {@link Callback} to return the results
+     * @param callback  {@link Callback} to return the results
      * @param <E>
      */
     public <E extends RealmObject> void getAllSortedRealmAsync(Class<E> clazz, String fieldName, Sort sortOrder, final Callback<RealmResults<E>> callback) {
@@ -237,15 +243,51 @@ public class RealmController {
     /**
      * save a single object to realm. will throw error if primary key already present
      *
-     * @param book
+     * @param object
      */
-    public void save(RealmObject book) {
+    public <E extends RealmObject> void save(E object) {
         Realm realm = Realm.getDefaultInstance();
         realm.beginTransaction();
-        realm.copyToRealm(book);
+        realm.copyToRealm(object);
         realm.commitTransaction();
         realm.close();
     }
+
+    /**
+     * save a single object to realm.
+     * This will be executed in background thread
+     * will throw error if primary key already present
+     *
+     * @param object
+     * @param callback {{@link WriteCallback having success and failure callbacks}}
+     * @param <E>
+     */
+    public <E extends RealmObject> void saveAsync(final E object, final WriteCallback callback) {
+        final Realm realm = Realm.getDefaultInstance();
+        realm.executeTransactionAsync(new Realm.Transaction() {
+            @Override
+            public void execute(Realm realm) {
+                realm.copyToRealm(object);
+            }
+        }, new Realm.Transaction.OnSuccess() {
+            @Override
+            public void onSuccess() {
+                if (callback != null) {
+                    callback.onSuccess();
+                }
+                realm.close();
+            }
+        }, new Realm.Transaction.OnError() {
+            @Override
+            public void onError(Throwable error) {
+                if (callback != null) {
+                    callback.onError(error);
+                }
+                realm.close();
+            }
+        });
+    }
+
 
     /**
      * save a list of objects to realm. will throw error if primary key already present
