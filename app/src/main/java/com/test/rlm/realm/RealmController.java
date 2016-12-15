@@ -353,6 +353,7 @@ public class RealmController {
         realm.beginTransaction();
         realm.copyToRealm(items);
         realm.commitTransaction();
+        realm.close();
     }
 
     /**
