@@ -46,8 +46,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        setupRecycler();
-
         final boolean sampleDataAlreadyAdded = Pref.isDummyDataAdded(this);
         if (!sampleDataAlreadyAdded) {
             final ArrayList<Book> dummyBooks = DummyData.getDummyBooks();
@@ -58,14 +56,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 @Override
                 public void onSuccess() {
                     Pref.dummyDataAdded(MainActivity.this, true); // on success set preference value to indicate dummy data has already been added. So next time it wont add again
+                    setupRecycler();
                 }
 
                 @Override
                 public void onError(Throwable error) {
                     Log.e(TAG, error.getMessage());
+                    setupRecycler();
                 }
             });
 
+        } else {
+            setupRecycler();
         }
 
 
