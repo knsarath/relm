@@ -71,6 +71,10 @@ public class BooksAdapter extends RecyclerView.Adapter<BooksAdapter.CardViewHold
         getFilter().filter(""); // refresh the dataset by searching with an empty string. because searching with empty string will fetch all items from db
     }
 
+    public void refresh(Filter.FilterListener listener) {
+        getFilter().filter("", listener); // refresh the dataset by searching with an empty string. because searching with empty string will fetch all items from db
+        //listener is for doing any extra operation after refresh has been done
+    }
 
     public class CardViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener, View.OnLongClickListener {
 
@@ -124,7 +128,6 @@ public class BooksAdapter extends RecyclerView.Adapter<BooksAdapter.CardViewHold
     @Override
     public Filter getFilter() {
         return new Filter() {
-            @Override
             protected FilterResults performFiltering(CharSequence constraint) {
                 final FilterResults filterResults = new FilterResults();
                 List<Book> tempList = new ArrayList<>();

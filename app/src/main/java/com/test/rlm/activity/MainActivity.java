@@ -118,7 +118,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         mRealmController.saveAsync(book, new RealmController.WriteCallback() {
                             @Override
                             public void onSuccess() {
-                                adapter.refresh();
+                                adapter.refresh(new Filter.FilterListener() {
+                                    @Override
+                                    public void onFilterComplete(int count) {
+                                        recycler.scrollToPosition(adapter.getItemCount() - 1);
+                                    }
+                                });
                             }
 
                             @Override
