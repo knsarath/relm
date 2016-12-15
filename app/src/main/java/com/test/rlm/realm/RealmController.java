@@ -83,9 +83,6 @@ public class RealmController {
     }
 
 
-
-
-
     /***
      * //find all objects in the given table. Note: result is not detached from realm.
      * So it returns a actual result set from realm with a valid realm instance associated with it
@@ -122,7 +119,6 @@ public class RealmController {
     }
 
 
-
     /**
      * find all objects in the given table sorted with a given field. Note: The returned result set is an in  memory copy of the actual result.
      * so any further update will not immediately affect the actual realm data until you do a commit
@@ -140,6 +136,34 @@ public class RealmController {
         RealmList<E> eRealmList = new RealmList<>();
         eRealmList.addAll(list);
         return eRealmList;
+    }
+
+    /**
+     * find all objects in the given table sorted with a given field. This will be executed in background thread
+     * Note: The returned result set is an in  memory copy of the actual result.
+     * so any further update will not immediately affect the actual realm data until you do a commit
+     *
+     * @param clazz
+     * @param fieldName
+     * @param sortOrder
+     * @param callback  {@link Callback} to return the results
+     * @param <E>
+     */
+    public <E extends RealmObject> void getAllSortedAsync(Class<E> clazz, String fieldName, Sort sortOrder, final Callback<RealmList<E>> callback) {
+        final Realm realm = Realm.getDefaultInstance();
+        final RealmResults<E> queryResult = realm.where(clazz).findAllSortedAsync(fieldName, sortOrder);
+        queryResult.addChangeListener(new RealmChangeListener<RealmResults<E>>() {
+            @Override
+            public void onChange(RealmResults<E> results) {
+                if (results.isLoaded()) {
+                    realm.close();
+                    RealmList<E> finalResult = new RealmList<>();
+                    finalResult.addAll(realm.copyFromRealm(results));
+                    callback.onSuccess(finalResult);
+                }
+            }
+        });
+
     }
 
 
