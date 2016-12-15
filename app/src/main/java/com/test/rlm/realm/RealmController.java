@@ -373,6 +373,7 @@ public class RealmController {
      * save a list of realm objects. if the primary key field is already present ,
      * This will be executed in separate thread
      * it will update the existing object (it will update all other fields)
+     *
      * @param items
      * @param callback
      */
@@ -427,4 +428,36 @@ public class RealmController {
         realm.commitTransaction();
         realm.close();
     }
+
+    /**
+     * clear all objects from given realm class(Table). Will be executed in background thread
+     *
+     * @param clazz
+     * @param callback
+     */
+    public void clearAllAsync(final Class<? extends RealmObject> clazz, final WriteCallback callback) {
+        Realm realm = Realm.getDefaultInstance();
+        realm.executeTransactionAsync(new Realm.Transaction() {
+            @Override
+            public void execute(Realm realm) {
+                realm.delete(clazz);
+            }
+        }, new Realm.Transaction.OnSuccess() {
+            @Override
+            public void onSuccess() {
+                if (callback != null) {
+                    callback.onSuccess();
+                }
+            }
+        }, new Realm.Transaction.OnError() {
+            @Override
+            public void onError(Throwable error) {
+                if (callback != null) {
+                    callback.onError(error);
+                }
+            }
+        });
+    }
+
+
 }
