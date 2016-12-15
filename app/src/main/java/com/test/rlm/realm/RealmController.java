@@ -99,6 +99,29 @@ public class RealmController {
 
     }
 
+    /**
+     * find all objects in the given table asynchronously. Note: result is not detached from realm.
+     * So it returns a actual result set from realm with a valid realm instance associated with it
+     *
+     * @param clazz
+     * @param listCallback
+     * @param <E>
+     */
+    public <E extends RealmObject> void getAllRealmAsync(final Class<E> clazz, final Callback<RealmResults<E>> listCallback) {
+        final Realm realm = Realm.getDefaultInstance();
+        final RealmResults<E> realmResults = realm.where(clazz).findAllAsync();
+        realmResults.addChangeListener(new RealmChangeListener<RealmResults<E>>() {
+            @Override
+            public void onChange(RealmResults<E> results) {
+                if (results.isLoaded()) { // isLoaded is true when the query is completed and all results are available
+                    listCallback.onSuccess(results);
+                }
+            }
+        });
+
+    }
+
+
 
     /**
      * find all objects in the given table sorted with a given field. Note: The returned result set is an in  memory copy of the actual result.

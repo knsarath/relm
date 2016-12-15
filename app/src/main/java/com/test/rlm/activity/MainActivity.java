@@ -16,6 +16,7 @@ import com.test.rlm.realm.RealmController;
 import java.util.ArrayList;
 
 import app.androidhive.info.realm.R;
+import io.realm.RealmResults;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     private static final String TAG = MainActivity.class.getSimpleName();
@@ -51,6 +52,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         //add new item
         fab.setOnClickListener(this);
+
+
     }
 
 
@@ -65,8 +68,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         /**
          * read all books in sorted order of title
          */
-        adapter = new BooksAdapter(this, mRealmController, mRealmController.getAllRealm(Book.class));
-        recycler.setAdapter(adapter);
+        mRealmController.getAllRealmAsync(Book.class, new RealmController.Callback<RealmResults<Book>>() {
+            @Override
+            public void onSuccess(RealmResults<Book> result) {
+                adapter = new BooksAdapter(MainActivity.this, mRealmController, result);
+                recycler.setAdapter(adapter);
+            }
+
+            @Override
+            public void onError() {
+
+            }
+        });
+
     }
 
     private void setRealmData() {
