@@ -313,11 +313,12 @@ public class RealmController {
      * save a list of objects to realm.
      * This will be executed in separate thread
      * will throw error if primary key already present
+     *
      * @param items
      * @param callback {{@link WriteCallback to get notified when write completes }}
      */
     public void saveAllAsync(final Iterable<? extends RealmObject> items, final WriteCallback callback) {
-        Realm realm = Realm.getDefaultInstance();
+        final Realm realm = Realm.getDefaultInstance();
         realm.executeTransactionAsync(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
@@ -329,6 +330,7 @@ public class RealmController {
                 if (callback != null) {
                     callback.onSuccess();
                 }
+                realm.close();
             }
         }, new Realm.Transaction.OnError() {
             @Override
@@ -336,6 +338,7 @@ public class RealmController {
                 if (callback != null) {
                     callback.onError(error);
                 }
+                realm.close();
             }
         });
     }
@@ -365,6 +368,40 @@ public class RealmController {
         realm.copyToRealmOrUpdate(items);
         realm.commitTransaction();
     }
+
+    /**
+     * save a list of realm objects. if the primary key field is already present ,
+     * This will be executed in separate thread
+     * it will update the existing object (it will update all other fields)
+     * @param items
+     * @param callback
+     */
+    public void saveAllOrUpdateAsync(final Iterable<? extends RealmObject> items, final WriteCallback callback) {
+        final Realm realm = Realm.getDefaultInstance();
+        realm.executeTransactionAsync(new Realm.Transaction() {
+            @Override
+            public void execute(Realm realm) {
+                realm.copyToRealmOrUpdate(items);
+            }
+        }, new Realm.Transaction.OnSuccess() {
+            @Override
+            public void onSuccess() {
+                if (callback != null) {
+                    callback.onSuccess();
+                }
+                realm.close();
+            }
+        }, new Realm.Transaction.OnError() {
+            @Override
+            public void onError(Throwable error) {
+                if (callback != null) {
+                    callback.onError(error);
+                }
+                realm.close();
+            }
+        });
+    }
+
 
     /**
      * deletes a single object from realm by position
