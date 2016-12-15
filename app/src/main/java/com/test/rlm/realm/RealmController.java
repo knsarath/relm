@@ -166,12 +166,12 @@ public class RealmController {
             @Override
             public void onChange(RealmResults<E> results) {
                 if (results.isLoaded()) {
-                    realm.close();
                     RealmList<E> finalResult = new RealmList<>();
                     finalResult.addAll(realm.copyFromRealm(results));
                     if (callback != null) {
                         callback.onSuccess(finalResult);
                     }
+                    realm.close();
                 }
             }
         });
@@ -405,15 +405,16 @@ public class RealmController {
 
 
     /**
-     * deletes a single object from realm by position
+     * deletes a single object from realm by value matching the field
      *
      * @param aClass
-     * @param position
+     * @param id
+     * @param value
      */
-    public void delete(Class<? extends RealmObject> aClass, int position) {
+    public void delete(Class<? extends RealmObject> aClass, String id, int value) {
         Realm realm = Realm.getDefaultInstance();
         realm.beginTransaction();
-        realm.where(aClass).findAll().deleteFromRealm(position);
+        realm.where(aClass).equalTo(id, value).findAll().deleteAllFromRealm();
         realm.commitTransaction();
     }
 

@@ -1,12 +1,17 @@
 package com.test.rlm.activity;
 
+import android.app.SearchManager;
+import android.content.Context;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.View;
 import android.widget.Toast;
 
@@ -17,9 +22,10 @@ import com.test.rlm.realm.RealmController;
 import java.util.ArrayList;
 
 import app.androidhive.info.realm.R;
-import io.realm.RealmResults;
+import io.realm.RealmList;
+import io.realm.Sort;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener, SearchView.OnQueryTextListener {
     private static final String TAG = MainActivity.class.getSimpleName();
     private BooksAdapter adapter;
     private FloatingActionButton fab;
@@ -83,10 +89,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         /**
          * read all books in sorted order of title
          */
-        mRealmController.getAllRealmAsync(Book.class, new RealmController.Callback<RealmResults<Book>>() {
+        mRealmController.getAllSortedAsync(Book.class, "title", Sort.ASCENDING, new RealmController.Callback<RealmList<Book>>() {
             @Override
-            public void onSuccess(RealmResults<Book> result) {
-                adapter = new BooksAdapter(MainActivity.this, mRealmController, result);
+            public void onSuccess(RealmList<Book> result) {
+                adapter = new BooksAdapter(mRealmController, new ArrayList<>(result));
                 recycler.setAdapter(adapter);
             }
 
@@ -130,4 +136,26 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.search_menu, menu);
+        // Associate searchable configuration with the SearchView
+        SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
+        SearchView searchView = (SearchView) menu.findItem(R.id.action_search).getActionView();
+        searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
+        searchView.setOnQueryTextListener(this);
+        return true;
+    }
+
+    @Override
+    public boolean onQueryTextSubmit(String query) {
+        return false;
+    }
+
+    @Override
+    public boolean onQueryTextChange(String newText) {
+        adapter.getFilter().filter(newText);
+        return true;
+    }
 }
