@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import app.androidhive.info.realm.R;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+    private static final String TAG = MainActivity.class.getSimpleName();
     private BooksAdapter adapter;
     private FloatingActionButton fab;
     private RecyclerView recycler;

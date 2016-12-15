@@ -57,4 +57,17 @@ public class Book extends RealmObject {
     public void setImageUrl(String imageUrl) {
         this.imageUrl = imageUrl;
     }
+
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("Book{");
+        sb.append("id=").append(id);
+        sb.append(", title='").append(title).append('\'');
+        sb.append(", description='").append(description).append('\'');
+        sb.append(", author='").append(author).append('\'');
+        sb.append(", imageUrl='").append(imageUrl).append('\'');
+        sb.append('}');
+        return sb.toString();
+    }
 }

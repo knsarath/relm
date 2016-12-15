@@ -6,6 +6,7 @@ import android.content.Context;
 import java.util.List;
 
 import io.realm.Realm;
+import io.realm.RealmChangeListener;
 import io.realm.RealmConfiguration;
 import io.realm.RealmList;
 import io.realm.RealmObject;
@@ -32,6 +33,14 @@ public class RealmController {
         Realm.setDefaultConfiguration(realmConfiguration);
     }
 
+
+    public interface Callback<E> {
+        void onSuccess(E result);
+
+        void onError();
+    }
+
+
     //==========================READS ============================//
 
 
@@ -49,6 +58,32 @@ public class RealmController {
         realm.close();
         return list;
     }
+
+    /**
+     * read all objects from a table asynchronously (in separate thread). It returns an in-memory copy of results , which is detached from the realm instance.
+     *
+     * @param clazz
+     * @param listCallback
+     * @param <E>
+     */
+    public <E extends RealmObject> void getAllAsync(final Class<E> clazz, final Callback<List<E>> listCallback) {
+        final Realm realm = Realm.getDefaultInstance();
+        final RealmResults<E> realmResults = realm.where(clazz).findAllAsync();
+        realmResults.addChangeListener(new RealmChangeListener<RealmResults<E>>() {
+            @Override
+            public void onChange(RealmResults<E> results) {
+                if (results.isLoaded()) { // isLoaded is true when the query is completed and all results are available
+                    final List<E> copyFromRealm = realm.copyFromRealm(results);
+                    realm.close();
+                    listCallback.onSuccess(copyFromRealm);
+                }
+            }
+        });
+
+    }
+
+
+
 
 
     /***
