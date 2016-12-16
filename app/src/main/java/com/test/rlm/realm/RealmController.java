@@ -16,6 +16,17 @@ import io.realm.Sort;
 
 
 public class RealmController {
+    public interface Callback<E> {
+        void onSuccess(E result);
+
+        void onError();
+    }
+
+    public interface WriteCallback {
+        void onSuccess();
+
+        void onError(Throwable error);
+    }
 
 
     /**
@@ -34,6 +45,8 @@ public class RealmController {
         Realm.setDefaultConfiguration(realmConfiguration);
     }
 
+
+    //==========================READS ============================//
 
     /**
      * select query with a given field value contains the given constraint
@@ -77,22 +90,6 @@ public class RealmController {
             }
         });
     }
-
-
-    public interface Callback<E> {
-        void onSuccess(E result);
-
-        void onError();
-    }
-
-    public interface WriteCallback {
-        void onSuccess();
-
-        void onError(Throwable error);
-    }
-
-
-    //==========================READS ============================//
 
 
     /**
@@ -414,6 +411,7 @@ public class RealmController {
         realm.beginTransaction();
         realm.copyToRealmOrUpdate(items);
         realm.commitTransaction();
+        realm.close();
     }
 
     /**
@@ -463,6 +461,7 @@ public class RealmController {
         realm.beginTransaction();
         realm.where(aClass).equalTo(id, value).findAll().deleteAllFromRealm();
         realm.commitTransaction();
+        realm.close();
     }
 
 
@@ -484,7 +483,7 @@ public class RealmController {
      * @param callback
      */
     public void clearAllAsync(final Class<? extends RealmObject> clazz, final WriteCallback callback) {
-        Realm realm = Realm.getDefaultInstance();
+        final Realm realm = Realm.getDefaultInstance();
         realm.executeTransactionAsync(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
@@ -496,6 +495,7 @@ public class RealmController {
                 if (callback != null) {
                     callback.onSuccess();
                 }
+                realm.close();
             }
         }, new Realm.Transaction.OnError() {
             @Override
@@ -503,6 +503,7 @@ public class RealmController {
                 if (callback != null) {
                     callback.onError(error);
                 }
+                realm.close();
             }
         });
     }
