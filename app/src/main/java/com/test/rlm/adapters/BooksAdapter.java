@@ -30,7 +30,7 @@ public class BooksAdapter extends RecyclerView.Adapter<BooksAdapter.CardViewHold
 
     public BooksAdapter(RealmController realmController) {
         mRealmController = realmController;
-        mBookList = mRealmController.getAll(Book.class);
+        refresh();
     }
 
     // create new views (invoked by the layout manager)
